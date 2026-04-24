@@ -25,13 +25,13 @@
     <i class="fa-solid fa-house"></i><span class="sidebar-text">Overview</span>
   </a>
   <a
-    href="/dashboard"
+    href="https://api.ferdev.my.id/dashboard"
     class="sidebar-item"
-    class:active={activeCat === 'dash'}
-    data-cat="dash"
-    on:click|preventDefault={() => navigate('dash')}
+    target="_blank"
+    rel="noopener noreferrer"
   >
     <i class="fa-solid fa-dashboard"></i><span class="sidebar-text">Dashboard</span>
+    <i class="fa-solid fa-arrow-up-right-from-square" style="margin-left: auto; font-size: 10px; opacity: 0.6;"></i>
   </a>
   <div class="sidebar-divider"></div>
   <div class="sidebar-label">Categories</div>

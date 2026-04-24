@@ -6,6 +6,9 @@
   export let baseUrl;
 
   const dispatch = createEventDispatcher();
+  
+  // Generate unique ID for this card instance
+  const uniqueCardId = `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   let cardEl;
   let bodyEl;
@@ -16,6 +19,13 @@
   let responseImageUrl = '';
   let formValues = {};
   let paramsSignature = '';
+  let activeCodeTab = 'curl';
+  let isTabSwitching = false;
+  let showParams = true;
+  let showCodeExamples = true;
+  let showResponseExample = true;
+  let resizeObserver;
+  let resizeTimeout;
 
   $: method = (api?.method || 'GET').toUpperCase();
   $: params = Array.isArray(api?.parameters) ? api.parameters : [];
@@ -32,6 +42,174 @@
       formValues = nextValues;
     }
   }
+
+  function updateCardHeight() {
+    if (!bodyEl || !isOpen) return;
+    
+    // Clear any pending updates
+    if (resizeTimeout) clearTimeout(resizeTimeout);
+    
+    resizeTimeout = setTimeout(() => {
+      // Temporarily set to auto to get real height
+      const currentTransition = bodyEl.style.transition;
+      bodyEl.style.transition = 'none';
+      bodyEl.style.height = 'auto';
+      const newHeight = bodyEl.scrollHeight;
+      bodyEl.style.height = `${newHeight}px`;
+      
+      // Restore transition after a frame
+      requestAnimationFrame(() => {
+        bodyEl.style.transition = currentTransition;
+      });
+    }, 100);
+  }
+
+  function switchTab(tab) {
+    if (isTabSwitching || activeCodeTab === tab) return;
+    isTabSwitching = true;
+    activeCodeTab = tab;
+    setTimeout(() => {
+      isTabSwitching = false;
+    }, 300);
+  }
+
+  function generateCodeExamples() {
+    const currentParams = {};
+    for (const [name, value] of Object.entries(formValues)) {
+      const trimmed = String(value).trim();
+      if (trimmed) currentParams[name] = trimmed;
+    }
+
+    const apikey = currentParams.apikey || 'YOUR_API_KEY';
+    delete currentParams.apikey;
+
+    const endpoint = `${baseUrl}${api.endpointPath}`;
+    
+    if (method === 'GET') {
+      const queryParams = { ...currentParams, apikey };
+      const queryString = new URLSearchParams(queryParams).toString();
+      const fullUrl = `${endpoint}?${queryString}`;
+
+      return {
+        curl: `curl -X GET "${fullUrl}"`,
+        javascript: `// Fetch API
+fetch('${fullUrl}')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+
+// Axios
+axios.get('${endpoint}', {
+  params: ${JSON.stringify(queryParams, null, 2)}
+})
+.then(response => console.log(response.data))
+.catch(error => console.error('Error:', error));`,
+        php: `<?php
+// cURL
+$url = '${fullUrl}';
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+curl_close($ch);
+$data = json_decode($response, true);
+print_r($data);
+
+// file_get_contents
+$response = file_get_contents('${fullUrl}');
+$data = json_decode($response, true);
+print_r($data);
+?>`,
+        python: `import requests
+
+url = '${endpoint}'
+params = ${JSON.stringify(queryParams, null, 2).replace(/"([^"]+)":/g, "'$1':")}
+
+response = requests.get(url, params=params)
+data = response.json()
+print(data)`
+      };
+    } else {
+      // POST
+      const paramsStr = JSON.stringify(currentParams, null, 2);
+      const paramsOneLine = JSON.stringify(currentParams);
+      
+      return {
+        curl: `curl -X POST "${endpoint}" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${apikey}" \\
+  -d '${paramsOneLine}'`,
+        javascript: `// Fetch API
+fetch('${endpoint}', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ${apikey}'
+  },
+  body: JSON.stringify(${paramsStr})
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+
+// Axios
+axios.post('${endpoint}', 
+  ${paramsStr},
+  {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ${apikey}'
+    }
+  }
+)
+.then(response => console.log(response.data))
+.catch(error => console.error('Error:', error));`,
+        php: `<?php
+$url = '${endpoint}';
+$data = json_encode(${paramsStr});
+
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    'Authorization: Bearer ${apikey}'
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+$result = json_decode($response, true);
+print_r($result);
+?>`,
+        python: `import requests
+
+url = '${endpoint}'
+headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ${apikey}'
+}
+data = ${paramsStr.replace(/"([^"]+)":/g, "'$1':")}
+
+response = requests.post(url, headers=headers, json=data)
+result = response.json()
+print(result)`
+      };
+    }
+  }
+
+  $: codeExamples = (() => {
+    try {
+      return generateCodeExamples();
+    } catch (error) {
+      console.error('Error generating code examples:', error);
+      return {
+        curl: '// Error generating code example',
+        javascript: '// Error generating code example',
+        php: '// Error generating code example',
+        python: '# Error generating code example'
+      };
+    }
+  })();
 
   function updateParam(name, value) {
     formValues = { ...formValues, [name]: value };
@@ -196,6 +374,24 @@
     }
   }
 
+  async function copyCode(lang) {
+    try {
+      await navigator.clipboard.writeText(codeExamples[lang]);
+      dispatch('toast', { message: `${lang.toUpperCase()} code copied to clipboard` });
+    } catch {
+      dispatch('toast', { message: 'Failed to copy code' });
+    }
+  }
+
+  async function copyResponse() {
+    try {
+      await navigator.clipboard.writeText(api.response.body);
+      dispatch('toast', { message: 'Response copied to clipboard' });
+    } catch {
+      dispatch('toast', { message: 'Failed to copy response' });
+    }
+  }
+
   onMount(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -211,11 +407,39 @@
 
     if (cardEl) observer.observe(cardEl);
 
-    return () => observer.disconnect();
+    // Add resize observer to update card height on viewport change
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        if (isOpen) {
+          updateCardHeight();
+        }
+      });
+      
+      if (bodyEl) {
+        resizeObserver.observe(bodyEl);
+      }
+    }
+
+    // Fallback: window resize listener
+    const handleResize = () => {
+      if (isOpen) {
+        updateCardHeight();
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      observer.disconnect();
+      if (resizeObserver) resizeObserver.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
   });
 
   onDestroy(() => {
     if (responseImageUrl) URL.revokeObjectURL(responseImageUrl);
+    if (resizeObserver) resizeObserver.disconnect();
+    if (resizeTimeout) clearTimeout(resizeTimeout);
   });
 </script>
 
@@ -235,9 +459,17 @@
   >
     <span class={`card-method method-${method}`}>{method}</span>
     <div class="card-info">
-      <div class="card-title"><span class="card-status-dot"></span>{api.title}</div>
+      <div class="card-title">
+        <span class="card-status-dot"></span>
+        {api.title}
+        {#if api.service && api.service !== api.title}
+          <span class="card-service-badge">{api.service}</span>
+        {/if}
+      </div>
       <div class="card-endpoint">{baseUrl}{api.endpointPath}</div>
-      <div class="card-desc">{api.description || ''}</div>
+      {#if api.description}
+        <div class="card-desc">{api.description}</div>
+      {/if}
     </div>
     <button class="card-toggle" type="button" on:click|stopPropagation={toggleCard}>
       <i class="fa-solid fa-plus"></i>
@@ -248,38 +480,220 @@
     <div class="card-body-inner">
       {#if params.length > 0}
         <div class="params-section">
-          <div class="params-title">Parameters</div>
-          <table class="params-table">
-            <thead>
-              <tr><th>Name</th><th>Type</th><th>Description</th></tr>
-            </thead>
-            <tbody>
+          <div 
+            class="section-collapsible-header" 
+            role="button"
+            tabindex="0"
+            aria-expanded={showParams}
+            aria-controls="params-{uniqueCardId}"
+            on:click={() => showParams = !showParams}
+            on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (showParams = !showParams)}
+          >
+            <div class="params-title">
+              <i class="fa-solid fa-list-ul"></i>
+              Parameters
+              <span class="param-count">{params.length}</span>
+            </div>
+            <div class="header-actions">
+              <button class="collapse-btn" type="button" tabindex="-1">
+                <i class="fa-solid fa-chevron-{showParams ? 'up' : 'down'}"></i>
+              </button>
+            </div>
+          </div>
+          {#if showParams}
+            <div class="params-grid" id="params-{uniqueCardId}">
               {#each params as param}
-                <tr>
-                  <td>
+                <div class="param-card">
+                  <div class="param-header">
                     <span class="param-name">{param.name}</span>
-                    <span class={param.required ? 'param-required' : 'param-optional'}>
-                      {param.required ? 'required' : 'optional'}
+                    <span class={param.required ? 'param-badge param-required' : 'param-badge param-optional'}>
+                      {param.required ? 'Required' : 'Optional'}
                     </span>
-                  </td>
-                  <td><span class="param-type">{param.type || 'string'}</span></td>
-                  <td class="param-desc">{param.description || ''}</td>
-                </tr>
+                  </div>
+                  <div class="param-meta">
+                    <span class="param-type-badge">
+                      <i class="fa-solid fa-tag"></i>
+                      {param.type || 'string'}
+                    </span>
+                    {#if param.defaultValue}
+                      <span class="param-default">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Default: <code>{param.defaultValue}</code>
+                      </span>
+                    {/if}
+                  </div>
+                  {#if param.description}
+                    <div class="param-description">
+                      {param.description}
+                    </div>
+                  {/if}
+                </div>
               {/each}
-            </tbody>
-          </table>
+            </div>
+          {/if}
         </div>
       {/if}
 
-      <div class="try-section">
+      <div class="code-examples-section">
+        <div 
+          class="section-collapsible-header" 
+          role="button"
+          tabindex="0"
+          aria-expanded={showCodeExamples}
+          aria-controls="code-{uniqueCardId}"
+          on:click={() => showCodeExamples = !showCodeExamples}
+          on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (showCodeExamples = !showCodeExamples)}
+        >
+          <div class="code-examples-title">
+            <i class="fa-solid fa-code"></i>Code Examples
+          </div>
+          <div class="header-actions">
+            {#if showCodeExamples}
+              <button 
+                class="code-copy-btn" 
+                type="button"
+                on:click|stopPropagation={() => copyCode(activeCodeTab)}
+                title="Copy code"
+              >
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            {/if}
+            <button class="collapse-btn" type="button" tabindex="-1">
+              <i class="fa-solid fa-chevron-{showCodeExamples ? 'up' : 'down'}"></i>
+            </button>
+          </div>
+        </div>
+        {#if showCodeExamples}
+          <div class="code-examples-tabs">
+            <button 
+              class="code-example-tab" 
+              class:active={activeCodeTab === 'curl'}
+              type="button"
+              disabled={isTabSwitching}
+              on:click={() => switchTab('curl')}
+            >
+              cURL
+            </button>
+            <button 
+              class="code-example-tab" 
+              class:active={activeCodeTab === 'javascript'}
+              type="button"
+              disabled={isTabSwitching}
+              on:click={() => switchTab('javascript')}
+            >
+              JavaScript
+            </button>
+            <button 
+              class="code-example-tab" 
+              class:active={activeCodeTab === 'php'}
+              type="button"
+              disabled={isTabSwitching}
+              on:click={() => switchTab('php')}
+            >
+              PHP
+            </button>
+            <button 
+              class="code-example-tab" 
+              class:active={activeCodeTab === 'python'}
+              type="button"
+              disabled={isTabSwitching}
+              on:click={() => switchTab('python')}
+            >
+              Python
+            </button>
+          </div>
+          <div class="code-examples-content">
+            {#if activeCodeTab === 'curl'}
+              <pre><code>{codeExamples.curl}</code></pre>
+            {:else if activeCodeTab === 'javascript'}
+              <pre><code>{codeExamples.javascript}</code></pre>
+            {:else if activeCodeTab === 'php'}
+              <pre><code>{codeExamples.php}</code></pre>
+            {:else if activeCodeTab === 'python'}
+              <pre><code>{codeExamples.python}</code></pre>
+            {/if}
+          </div>
+        {/if}
+      </div>
+
+      {#if api.response}
+        <div class="response-example-section">
+          <div 
+            class="section-collapsible-header" 
+            role="button"
+            tabindex="0"
+            aria-expanded={showResponseExample}
+            aria-controls="response-{uniqueCardId}"
+            on:click={() => showResponseExample = !showResponseExample}
+            on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (showResponseExample = !showResponseExample)}
+          >
+            <div class="response-example-title">
+              <i class="fa-solid fa-arrow-left-long"></i>
+              Response Example
+              {#if api.response.statusCode}
+                <span class="response-status-badge status-{api.response.statusCode >= 200 && api.response.statusCode < 300 ? 'success' : 'error'}">
+                  {api.response.statusCode} {api.response.statusCode === 200 ? 'OK' : 'Error'}
+                </span>
+              {/if}
+            </div>
+            <div class="header-actions">
+              {#if showResponseExample && api.response.body}
+                <button 
+                  class="code-copy-btn" 
+                  type="button"
+                  on:click|stopPropagation={copyResponse}
+                  title="Copy response"
+                >
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              {/if}
+              <button class="collapse-btn" type="button" tabindex="-1">
+                <i class="fa-solid fa-chevron-{showResponseExample ? 'up' : 'down'}"></i>
+              </button>
+            </div>
+          </div>
+          
+          {#if showResponseExample}
+            {#if api.response.headers}
+              <div class="response-headers">
+                <div class="response-headers-title">
+                  <i class="fa-solid fa-file-lines"></i>
+                  Headers
+                </div>
+                <div class="response-headers-list">
+                  {#each Object.entries(api.response.headers) as [key, value]}
+                    <div class="response-header-item">
+                      <span class="header-key">{key}:</span>
+                      <span class="header-value">{value}</span>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+
+            {#if api.response.body}
+              <div class="response-body-section">
+                <div class="response-body-title">
+                  <i class="fa-solid fa-brackets-curly"></i>
+                  Response Body
+                </div>
+                <pre><code>{@html syntaxHighlight(api.response.body)}</code></pre>
+              </div>
+            {/if}
+          {/if}
+        </div>
+      {/if}
+
+        <div class="try-section">
         <div class="try-title"><i class="fa-solid fa-bolt"></i>Try It Out</div>
         <div class="try-form">
-          {#each params as param}
-            {@const inputId = `try-${api.id}-${param.name}`.replace(/[^a-zA-Z0-9_-]/g, '-')}
+          {#each params as param, paramIndex}
+            {@const inputId = `input-${uniqueCardId}-${paramIndex}`}
             <div class="try-field">
               <label class="try-label" for={inputId}>{param.name}{param.required ? ' *' : ''}</label>
               <input
                 id={inputId}
+                name={`${uniqueCardId}-${param.name}`}
                 class="try-input"
                 type="text"
                 placeholder={param.defaultValue || param.description || param.name}

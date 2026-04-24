@@ -169,7 +169,9 @@
   }
 
   function handleScroll() {
-    showBackTop = window.scrollY > 400;
+    requestAnimationFrame(() => {
+      showBackTop = window.scrollY > 400;
+    });
   }
 
   function initScrollSpy() {
@@ -203,10 +205,35 @@
     }, 120);
   }
 
+  function initCodeTabs() {
+    const tabGroups = document.querySelectorAll('.code-examples');
+    
+    tabGroups.forEach(group => {
+      const tabs = group.querySelectorAll('.code-tab');
+      const contents = group.querySelectorAll('.code-content');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const lang = tab.dataset.lang;
+          
+          tabs.forEach(t => t.classList.remove('active'));
+          contents.forEach(c => c.classList.remove('active'));
+          
+          tab.classList.add('active');
+          const targetContent = group.querySelector(`.code-content[data-lang="${lang}"]`);
+          if (targetContent) {
+            targetContent.classList.add('active');
+          }
+        });
+      });
+    });
+  }
+
   onMount(() => {
     applyInitialTheme();
     loadData();
     handleScroll();
+    initCodeTabs();
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', closeSidebar);
 
@@ -234,8 +261,14 @@
   });
 
   $: categoriesWithApis = categories
-    .filter((category) => Array.isArray(category.apis) && category.apis.length > 0)
-    .map((category) => ({ ...category, slug: slugify(category.name) }));
+    .map((category) => ({
+      ...category,
+      slug: slugify(category.name),
+      apis: Array.isArray(category.apis) 
+        ? category.apis.filter((api) => api.isAktif !== false)
+        : []
+    }))
+    .filter((category) => category.apis.length > 0);
 
   $: allApis = categoriesWithApis.flatMap((category) => category.apis);
 
@@ -368,6 +401,227 @@
               <div class="stat-label">{stat.l}</div>
             </div>
           {/each}
+        </div>
+      </div>
+
+      <div class="usage-guide">
+        <div class="usage-header">
+          <i class="fa-solid fa-book"></i>
+          <h2>Cara Penggunaan API</h2>
+        </div>
+        <p class="usage-intro">
+          FerDev API mendukung metode <strong>GET</strong> dan <strong>POST</strong>. Berikut adalah panduan lengkap untuk menggunakan kedua metode tersebut.
+        </p>
+
+        <div class="method-section">
+          <div class="method-header">
+            <span class="method-badge method-get">GET</span>
+            <h3>GET Request</h3>
+          </div>
+          <p class="method-desc">Untuk GET request, parameter dikirim melalui query string di URL.</p>
+          
+          <div class="code-examples">
+            <div class="code-tabs">
+              <button class="code-tab active" data-lang="curl">cURL</button>
+              <button class="code-tab" data-lang="javascript">JavaScript</button>
+              <button class="code-tab" data-lang="php">PHP</button>
+              <button class="code-tab" data-lang="python">Python</button>
+            </div>
+            
+            <div class="code-content active" data-lang="curl">
+              <pre><code>curl -X GET "https://api.ferdev.my.id/ai/chatgpt?text=Hello&apikey=YOUR_API_KEY"</code></pre>
+            </div>
+            
+            <div class="code-content" data-lang="javascript">
+              <pre><code>{`// Menggunakan Fetch API
+fetch('https://api.ferdev.my.id/ai/chatgpt?text=Hello&apikey=YOUR_API_KEY')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+
+// Menggunakan Axios
+const axios = require('axios');
+axios.get('https://api.ferdev.my.id/ai/chatgpt', {
+  params: {
+    text: 'Hello',
+    apikey: 'YOUR_API_KEY'
+  }
+})
+.then(response => console.log(response.data))
+.catch(error => console.error('Error:', error));`}</code></pre>
+            </div>
+            
+            <div class="code-content" data-lang="php">
+              <pre><code>{`<?php
+// Menggunakan cURL
+$url = 'https://api.ferdev.my.id/ai/chatgpt?text=Hello&apikey=YOUR_API_KEY';
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+curl_close($ch);
+$data = json_decode($response, true);
+print_r($data);
+
+// Menggunakan file_get_contents
+$url = 'https://api.ferdev.my.id/ai/chatgpt?text=Hello&apikey=YOUR_API_KEY';
+$response = file_get_contents($url);
+$data = json_decode($response, true);
+print_r($data);
+?>`}</code></pre>
+            </div>
+            
+            <div class="code-content" data-lang="python">
+              <pre><code>{`# Menggunakan requests
+import requests
+
+url = 'https://api.ferdev.my.id/ai/chatgpt'
+params = {
+    'text': 'Hello',
+    'apikey': 'YOUR_API_KEY'
+}
+response = requests.get(url, params=params)
+data = response.json()
+print(data)`}</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="method-section">
+          <div class="method-header">
+            <span class="method-badge method-post">POST</span>
+            <h3>POST Request</h3>
+          </div>
+          <p class="method-desc">Untuk POST request, API key dikirim melalui header Authorization, dan parameter dikirim dalam body request sebagai JSON.</p>
+          
+          <div class="code-examples">
+            <div class="code-tabs">
+              <button class="code-tab active" data-lang="curl-post">cURL</button>
+              <button class="code-tab" data-lang="javascript-post">JavaScript</button>
+              <button class="code-tab" data-lang="php-post">PHP</button>
+              <button class="code-tab" data-lang="python-post">Python</button>
+            </div>
+            
+            <div class="code-content active" data-lang="curl-post">
+              <pre><code>{`curl -X POST "https://api.ferdev.my.id/ai/chatgpt" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -d '{"text": "Hello"}'`}</code></pre>
+            </div>
+            
+            <div class="code-content" data-lang="javascript-post">
+              <pre><code>{`// Menggunakan Fetch API
+fetch('https://api.ferdev.my.id/ai/chatgpt', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    text: 'Hello'
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+
+// Menggunakan Axios
+const axios = require('axios');
+axios.post('https://api.ferdev.my.id/ai/chatgpt', 
+  { text: 'Hello' },
+  {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer YOUR_API_KEY'
+    }
+  }
+)
+.then(response => console.log(response.data))
+.catch(error => console.error('Error:', error));`}</code></pre>
+            </div>
+            
+            <div class="code-content" data-lang="php-post">
+              <pre><code>{`<?php
+// Menggunakan cURL
+$url = 'https://api.ferdev.my.id/ai/chatgpt';
+$data = json_encode(['text' => 'Hello']);
+
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    'Authorization: Bearer YOUR_API_KEY'
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+$result = json_decode($response, true);
+print_r($result);
+
+// Menggunakan file_get_contents
+$url = 'https://api.ferdev.my.id/ai/chatgpt';
+$data = json_encode(['text' => 'Hello']);
+
+$options = [
+    'http' => [
+        'method' => 'POST',
+        'header' => "Content-Type: application/json\\r\\n" .
+                    "Authorization: Bearer YOUR_API_KEY\\r\\n",
+        'content' => $data
+    ]
+];
+
+$context = stream_context_create($options);
+$response = file_get_contents($url, false, $context);
+$result = json_decode($response, true);
+print_r($result);
+?>`}</code></pre>
+            </div>
+            
+            <div class="code-content" data-lang="python-post">
+              <pre><code>{`# Menggunakan requests
+import requests
+import json
+
+url = 'https://api.ferdev.my.id/ai/chatgpt'
+headers = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer YOUR_API_KEY'
+}
+data = {
+    'text': 'Hello'
+}
+
+response = requests.post(url, headers=headers, json=data)
+result = response.json()
+print(result)`}</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="usage-notes">
+          <div class="note-card">
+            <i class="fa-solid fa-key"></i>
+            <div>
+              <strong>API Key</strong>
+              <p>Dapatkan API key gratis di <a href="https://api.ferdev.my.id/register" target="_blank">api.ferdev.my.id/register</a></p>
+            </div>
+          </div>
+          <div class="note-card">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div>
+              <strong>Rate Limiting</strong>
+              <p>Setiap API key memiliki batas request. Pastikan untuk menggunakan API secara bijak.</p>
+            </div>
+          </div>
+          <div class="note-card">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>
+              <strong>Response Format</strong>
+              <p>Semua response dikembalikan dalam format JSON, kecuali untuk endpoint yang mengembalikan gambar.</p>
+            </div>
+          </div>
         </div>
       </div>
 

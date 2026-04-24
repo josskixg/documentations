@@ -663,11 +663,12 @@ body {
 .api-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 10px;
     overflow: hidden;
-    transition: all var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
     transform: translateY(16px);
+    contain: layout style paint;
 }
 
 .api-card.revealed {
@@ -677,7 +678,12 @@ body {
 
 .api-card:hover {
     border-color: var(--border-hover);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.api-card.open {
+    overflow: visible;
 }
 
 .card-head {
@@ -686,6 +692,17 @@ body {
     align-items: flex-start;
     gap: 12px;
     cursor: pointer;
+    background: var(--surface);
+    border-radius: 10px 10px 0 0;
+    transition: background 0.2s ease;
+}
+
+.card-head:hover {
+    background: var(--surface-2);
+}
+
+.api-card.open .card-head {
+    border-radius: 10px 10px 0 0;
 }
 
 .card-method {
@@ -722,6 +739,23 @@ body {
     font-weight: 700;
     color: var(--text);
     margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.card-service-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 500;
+    font-family: "DM Sans", sans-serif;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--surface-3);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
 }
 
 .card-endpoint {
@@ -776,25 +810,307 @@ body {
     height: 0;
     overflow: hidden;
     transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--surface-2);
+    border-radius: 0 0 10px 10px;
+    will-change: height;
+}
+
+.api-card.open .card-body {
+    overflow: visible;
 }
 
 .card-body-inner {
     border-top: 1px solid var(--border);
+    min-height: 0;
+}
+
+.card-body-inner > *:last-child {
+    border-bottom: none;
 }
 
 .params-section {
-    padding: 16px 18px;
+    padding: 20px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--border);
+}
+
+.params-section:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] .params-section:hover {
+    background: rgba(0, 0, 0, 0.02);
 }
 
 .params-title {
-    font-size: 10px;
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 10px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
+.params-title i {
+    color: var(--accent);
+    font-size: 16px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.section-collapsible-header:hover .params-title i,
+.section-collapsible-header:hover .code-examples-title i,
+.section-collapsible-header:hover .response-example-title i {
+    transform: scale(1.05);
+}
+
+.params-grid {
+    display: grid;
+    gap: 12px;
+    animation: expandSection 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+}
+
+@keyframes expandSection {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.param-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.param-card:hover {
+    border-color: var(--accent);
+    background: var(--surface-2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .param-card {
+    background: #ffffff;
+}
+
+[data-theme="light"] .param-card:hover {
+    background: var(--surface-2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.param-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.param-name {
+    font-family: "Fira Code", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-2);
+    letter-spacing: 0.3px;
+}
+
+.param-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: "DM Sans", sans-serif;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.param-badge.param-required {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+.param-badge.param-optional {
+    background: var(--surface-3);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+
+.param-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.param-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: "Fira Code", monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--surface-3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.param-type-badge i {
+    font-size: 10px;
+    color: var(--accent-2);
+}
+
+.param-default {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.param-default i {
+    font-size: 10px;
+    color: var(--accent-2);
+}
+
+.param-default code {
+    font-size: 11px;
+    padding: 2px 6px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 3px;
+}
+
+.param-description {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 0;
+}
+
+.param-card:hover {
+    border-color: var(--accent);
+    background: var(--surface);
+    transform: translateX(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .param-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.param-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.param-name {
+    font-family: "Fira Code", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-2);
+}
+
+.param-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.param-badge.param-required {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+.param-badge.param-optional {
+    background: var(--surface);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+
+.param-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.param-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: "Fira Code", monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--surface);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.param-type-badge i {
+    font-size: 10px;
+}
+
+.param-default {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.param-default i {
+    font-size: 10px;
+    color: var(--accent-2);
+}
+
+.param-default code {
+    font-size: 11px;
+    padding: 2px 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.param-description {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 8px;
+}
+
+/* Legacy table styles - keep for backward compatibility */
 .params-table {
     width: 100%;
     border-collapse: collapse;
@@ -814,42 +1130,12 @@ body {
 .params-table td {
     font-size: 12.5px;
     padding: 8px 8px;
-    border-bottom: 1px solid var(--border) 50;
+    border-bottom: 1px solid var(--border);
     vertical-align: top;
 }
 
 .params-table tr:last-child td {
     border-bottom: none;
-}
-
-.param-name {
-    font-family: "Fira Code", monospace;
-    font-size: 12px;
-    color: var(--accent-2);
-}
-
-.param-required {
-    display: inline-block;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: #ff3d0015;
-    color: var(--accent);
-    margin-left: 4px;
-}
-
-.param-optional {
-    display: inline-block;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: var(--surface-3);
-    color: var(--text-dim);
-    margin-left: 4px;
 }
 
 .param-type {
@@ -863,26 +1149,515 @@ body {
     color: var(--text-muted);
 }
 
-.try-section {
-    padding: 16px 18px;
-    border-top: 1px solid var(--border);
-    background: var(--surface-2);
+/* Collapsible Section Headers */
+.section-collapsible-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    cursor: pointer;
+    user-select: none;
+    padding: 0;
+    margin-bottom: 20px;
+    border-radius: 0;
+    transition: all 0.2s ease;
+    background: transparent;
+    gap: 12px;
+    width: 100%;
 }
 
-.try-title {
-    font-size: 10px;
+.section-collapsible-header:hover {
+    opacity: 0.85;
+}
+
+.section-collapsible-header:active {
+    transform: scale(0.99);
+}
+
+.header-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: var(--surface-3);
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.collapse-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    transform: scale(1.1);
+}
+
+.param-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    border-radius: 11px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: "Fira Code", monospace;
+    flex-shrink: 0;
+}
+
+/* Code Examples in API Cards */
+.code-examples-section {
+    margin-bottom: 0;
+    padding: 20px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--border);
+}
+
+.code-examples-section:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] .code-examples-section:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.code-examples-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.code-examples-title i {
+    color: var(--accent);
+    font-size: 16px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.code-copy-btn {
+    padding: 6px 12px;
+    background: var(--surface-3);
+    border: none;
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
+}
+
+.code-copy-btn:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    transform: scale(1.05);
+}
+
+.code-copy-btn i {
+    font-size: 13px;
+}
+
+.code-examples-tabs {
+    display: flex;
+    gap: 6px;
+    margin: 12px 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: expandSection 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.code-examples-tabs::-webkit-scrollbar {
+    height: 3px;
+}
+
+.code-example-tab {
+    padding: 6px 14px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all var(--transition);
+    font-family: "Fira Code", monospace;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.code-example-tab:hover:not(:disabled) {
+    background: var(--surface-3);
+    color: var(--text);
+}
+
+.code-example-tab.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.code-example-tab:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.code-examples-content {
+    position: relative;
+    min-height: 60px;
+}
+
+.code-examples-content pre {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
+    animation: fadeInCode 0.25s ease;
+}
+
+@keyframes fadeInCode {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.code-examples-content code {
+    font-family: "Fira Code", monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+    background: transparent;
+    padding: 0;
+    display: block;
+    white-space: pre;
+}
+
+.response-example-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.response-example-title i {
+    color: var(--accent);
+    font-size: 16px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Response Example Section */
+.response-example-section {
+    margin-bottom: 0;
+    padding: 20px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--border);
+}
+
+.response-example-section:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] .response-example-section:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.response-example-section:last-child {
+    border-bottom: none;
+}
+
+.response-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: "Fira Code", monospace;
+}
+
+.response-status-badge.status-success {
+    background: var(--get-bg);
+    color: var(--get);
+    border: 1px solid var(--get);
+}
+
+.response-status-badge.status-error {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+
+.response-headers {
+    margin: 12px 0;
+    padding: 12px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    animation: expandSection 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.response-headers-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.response-headers-title i {
+    font-size: 11px;
+    color: var(--accent-2);
+}
+
+.response-headers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.response-header-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-family: "Fira Code", monospace;
+}
+
+.header-key {
+    color: var(--accent-2);
+    font-weight: 600;
+}
+
+.header-value {
+    color: var(--text-muted);
+}
+
+.response-body-section {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    animation: expandSection 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.response-body-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.response-body-title i {
+    font-size: 11px;
+    color: var(--accent-2);
+}
+
+.response-body-section pre {
+    margin: 0;
+    padding: 16px;
+    background: var(--surface-3);
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.response-body-section code {
+    font-family: "Fira Code", monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+    background: transparent;
+    padding: 0;
+    display: block;
+    white-space: pre;
+}
+
+@media (max-width: 768px) {
+    .response-example-section {
+        padding: 16px;
+    }
+
+    .response-status-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .response-headers {
+        padding: 10px;
+    }
+
+    .response-headers-title,
+    .response-body-title {
+        font-size: 11px;
+    }
+
+    .response-header-item {
+        font-size: 11px;
+    }
+
+    .response-body-section pre {
+        padding: 12px;
+        max-height: 250px;
+    }
+
+    .response-body-section code {
+        font-size: 11px;
+    }
+
+    .section-collapsible-header {
+        padding: 0 0 10px 0;
+        margin-bottom: 12px;
+    }
+
+    .collapse-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 11px;
+    }
+
+    .code-copy-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    .param-count {
+        min-width: 20px;
+        height: 20px;
+        font-size: 10px;
+        padding: 0 6px;
+    }
+
+    .header-actions {
+        gap: 6px;
+    }
+
+    .params-section,
+    .code-examples-section,
+    .response-example-section,
+    .try-section {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-collapsible-header {
+        padding: 0 0 8px 0;
+        margin-bottom: 10px;
+    }
+
+    .code-copy-btn {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .code-copy-btn i {
+        font-size: 11px;
+    }
+
+    .collapse-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+
+    .param-count {
+        min-width: 18px;
+        height: 18px;
+        font-size: 9px;
+        padding: 0 5px;
+    }
+
+    .params-section,
+    .code-examples-section,
+    .response-example-section,
+    .try-section {
+        padding: 14px;
+    }
+}
+
+.try-section {
+    padding: 20px;
+    border-top: none;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.try-section:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] .try-section:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.try-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .try-title i {
     color: var(--accent);
+    font-size: 16px;
+}
     font-size: 11px;
 }
 
@@ -1354,3 +2129,524 @@ code {
     font-size: 13px;
     margin-bottom: 16px;
 }
+
+/* Usage Guide Section */
+.usage-guide {
+    max-width: 1200px;
+    margin: 48px auto;
+    padding: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.usage-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.usage-header i {
+    font-size: 24px;
+    color: var(--accent);
+}
+
+.usage-header h2 {
+    font-family: "Syne", sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.usage-intro {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 32px;
+}
+
+.usage-intro strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.method-section {
+    margin-bottom: 40px;
+    padding: 24px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.method-section:last-of-type {
+    margin-bottom: 32px;
+}
+
+.method-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.method-header h3 {
+    font-family: "Syne", sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+}
+
+.method-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.method-badge.method-get {
+    background: var(--get-bg);
+    color: var(--get);
+    border: 1px solid var(--get);
+}
+
+.method-badge.method-post {
+    background: var(--post-bg);
+    color: var(--post);
+    border: 1px solid var(--post);
+}
+
+.method-desc {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.code-examples {
+    margin-top: 16px;
+}
+
+.code-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+}
+
+.code-tab {
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all var(--transition);
+    font-family: "Fira Code", monospace;
+}
+
+.code-tab:hover {
+    background: var(--surface-3);
+    color: var(--text);
+}
+
+.code-tab.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.code-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.code-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.code-content pre {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 0;
+}
+
+.code-content code {
+    font-family: "Fira Code", monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    background: transparent;
+    padding: 0;
+    display: block;
+    white-space: pre;
+}
+
+.usage-notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.note-card {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: all var(--transition);
+}
+
+.note-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.note-card i {
+    font-size: 24px;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.note-card strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.note-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.note-card a {
+    color: var(--accent-2);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.note-card a:hover {
+    text-decoration: underline;
+}
+
+/* Tablet Landscape */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .params-section,
+    .code-examples-section,
+    .response-example-section,
+    .try-section {
+        padding: 18px 22px;
+    }
+
+    .section-collapsible-header {
+        padding: 0 0 10px 0;
+        margin-bottom: 14px;
+    }
+
+    .params-title,
+    .code-examples-title,
+    .response-example-title,
+    .try-title {
+        font-size: 13px;
+    }
+
+    .params-title i,
+    .code-examples-title i,
+    .response-example-title i,
+    .try-title i {
+        font-size: 15px;
+    }
+
+    .collapse-btn {
+        width: 27px;
+        height: 27px;
+        font-size: 12px;
+    }
+
+    .param-card {
+        padding: 13px;
+    }
+
+    .code-examples-content pre,
+    .response-body-section pre {
+        max-height: 350px;
+    }
+
+    .param-name {
+        font-size: 12px;
+    }
+
+    .param-badge {
+        font-size: 9px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+    .params-section,
+    .code-examples-section,
+    .response-example-section,
+    .try-section {
+        padding: 32px 40px;
+    }
+
+    .section-collapsible-header {
+        padding: 0;
+        margin-bottom: 24px;
+    }
+
+    .params-title,
+    .code-examples-title,
+    .response-example-title,
+    .try-title {
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .params-title i,
+    .code-examples-title i,
+    .response-example-title i,
+    .try-title i {
+        font-size: 18px;
+    }
+
+    .header-actions {
+        gap: 12px;
+    }
+
+    .params-grid {
+        gap: 16px;
+    }
+
+    .param-card {
+        padding: 18px 20px;
+        border-width: 1px;
+    }
+
+    .param-header {
+        margin-bottom: 14px;
+    }
+
+    .param-name {
+        font-size: 14px;
+        letter-spacing: 0.4px;
+    }
+
+    .param-badge {
+        font-size: 10px;
+        padding: 4px 10px;
+    }
+
+    .param-meta {
+        gap: 14px;
+        margin-bottom: 12px;
+    }
+
+    .param-type-badge {
+        font-size: 12px;
+        padding: 5px 10px;
+        gap: 6px;
+    }
+
+    .param-type-badge i {
+        font-size: 11px;
+    }
+
+    .param-default {
+        font-size: 12px;
+        gap: 6px;
+    }
+
+    .param-default i {
+        font-size: 11px;
+    }
+
+    .param-default code {
+        font-size: 12px;
+        padding: 3px 8px;
+    }
+
+    .param-description {
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .code-examples-content pre,
+    .response-body-section pre {
+        max-height: 500px;
+        padding: 20px;
+    }
+
+    .code-examples-content code,
+    .response-body-section code {
+        font-size: 13px;
+        line-height: 1.8;
+    }
+
+    .collapse-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+    }
+
+    .code-copy-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .param-count {
+        min-width: 24px;
+        height: 24px;
+        font-size: 12px;
+        padding: 0 8px;
+    }
+
+    .response-headers {
+        padding: 18px;
+    }
+
+    .response-headers-title,
+    .response-body-title {
+        font-size: 12px;
+        padding: 12px 18px;
+    }
+
+    .response-header-item {
+        font-size: 13px;
+    }
+
+    .header-key {
+        font-size: 13px;
+    }
+
+    .header-value {
+        font-size: 13px;
+    }
+
+    .code-example-tab {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .response-status-badge {
+        font-size: 12px;
+        padding: 5px 12px;
+    }
+
+    /* Card improvements */
+    .api-card {
+        margin-bottom: 24px;
+    }
+
+    .card-head {
+        padding: 22px 26px;
+    }
+
+    .card-title {
+        font-size: 15px;
+    }
+
+    .card-endpoint {
+        font-size: 12px;
+    }
+
+    .card-desc {
+        font-size: 13px;
+    }
+
+    .card-method {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+
+    /* Try section improvements */
+    .try-form {
+        gap: 16px;
+    }
+
+    .try-label {
+        font-size: 13px;
+    }
+
+    .try-input {
+        padding: 11px 15px;
+        font-size: 13px;
+    }
+
+    .btn {
+        padding: 11px 20px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    .usage-guide {
+        padding: 24px 20px;
+        margin: 32px 16px;
+    }
+
+    .usage-header h2 {
+        font-size: 22px;
+    }
+
+    .method-section {
+        padding: 16px;
+    }
+
+    .method-header h3 {
+        font-size: 18px;
+    }
+
+    .code-tabs {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .code-tab {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .code-content pre {
+        padding: 16px;
+    }
+
+    .code-content code {
+        font-size: 11px;
+    }
+
+    .usage-notes {
+        grid-template-columns: 1fr;
+    }
+}
+
