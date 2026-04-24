@@ -358,7 +358,7 @@
         <div class="hero-label">&#9632; REST API Documentation</div>
         <div class="hero-title">FERDEV <span>API</span></div>
         <div class="hero-desc">
-          Koleksi REST API Indonesia yang lengkap. AI, Downloader, Search, Tools, dan banyak lagi. Semua dalam satu
+          Koleksi REST API yang lengkap. AI, Downloader, Search, Tools, dan banyak lagi. Semua dalam satu
           platform.
         </div>
         <div class="hero-stats" id="heroStats">

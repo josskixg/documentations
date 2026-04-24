@@ -24,6 +24,15 @@
   >
     <i class="fa-solid fa-house"></i><span class="sidebar-text">Overview</span>
   </a>
+  <a
+    href="/dashboard"
+    class="sidebar-item"
+    class:active={activeCat === 'dash'}
+    data-cat="dash"
+    on:click|preventDefault={() => navigate('dash')}
+  >
+    <i class="fa-solid fa-dashboard"></i><span class="sidebar-text">Dashboard</span>
+  </a>
   <div class="sidebar-divider"></div>
   <div class="sidebar-label">Categories</div>
   <div id="sidebarCats">
