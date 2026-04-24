@@ -31,7 +31,7 @@
     rel="noopener noreferrer"
   >
     <i class="fa-solid fa-dashboard"></i><span class="sidebar-text">Dashboard</span>
-    <i class="fa-solid fa-arrow-up-right-from-square" style="margin-left: auto; font-size: 10px; opacity: 0.6;"></i>
+    <i class="fa-solid fa-arrow-up-right-from-square sidebar-text" style="margin-left: auto; font-size: 10px; opacity: 0.6;"></i>
   </a>
   <div class="sidebar-divider"></div>
   <div class="sidebar-label">Categories</div>

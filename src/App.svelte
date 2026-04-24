@@ -349,10 +349,10 @@
     <header class="header" class:sidebar-collapsed={sidebarCollapsed}>
       <div class="header-brand">
         <button class="mobile-menu-btn" id="menuBtn" on:click={toggleSidebar}>
-          <i class="fa-solid fa-bars"></i>
+          <i class="fa-solid {sidebarOpen || !sidebarCollapsed ? 'fa-xmark' : 'fa-bars'}"></i>
         </button>
         <a href="#hero" class="logo" on:click|preventDefault={() => onNavigate({ detail: { slug: 'hero' } })}
-          >FER<span class="accent">DEV</span></a
+          ><img src="https://cdn.ferdev.my.id/assets/img/brand_image.png" alt="FerDev" class="logo-img" /></a
         >
       </div>
       <div class="header-left">
@@ -429,21 +429,21 @@
             </div>
             
             <div class="code-content active" data-lang="curl">
-              <pre><code>curl -X GET "https://api.ferdev.my.id/ai/chatgpt?text=Hello&apikey=YOUR_API_KEY"</code></pre>
+              <pre><code>curl -X GET "https://api.ferdev.my.id/search/pinterest?query=nature&apikey=YOUR_API_KEY"</code></pre>
             </div>
             
             <div class="code-content" data-lang="javascript">
               <pre><code>{`// Menggunakan Fetch API
-fetch('https://api.ferdev.my.id/ai/chatgpt?text=Hello&apikey=YOUR_API_KEY')
+fetch('https://api.ferdev.my.id/search/pinterest?query=nature&apikey=YOUR_API_KEY')
   .then(response => response.json())
   .then(data => console.log(data))
   .catch(error => console.error('Error:', error));
 
 // Menggunakan Axios
 const axios = require('axios');
-axios.get('https://api.ferdev.my.id/ai/chatgpt', {
+axios.get('https://api.ferdev.my.id/search/pinterest', {
   params: {
-    text: 'Hello',
+    query: 'nature',
     apikey: 'YOUR_API_KEY'
   }
 })
@@ -454,7 +454,7 @@ axios.get('https://api.ferdev.my.id/ai/chatgpt', {
             <div class="code-content" data-lang="php">
               <pre><code>{`<?php
 // Menggunakan cURL
-$url = 'https://api.ferdev.my.id/ai/chatgpt?text=Hello&apikey=YOUR_API_KEY';
+$url = 'https://api.ferdev.my.id/search/pinterest?query=nature&apikey=YOUR_API_KEY';
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
@@ -463,7 +463,7 @@ $data = json_decode($response, true);
 print_r($data);
 
 // Menggunakan file_get_contents
-$url = 'https://api.ferdev.my.id/ai/chatgpt?text=Hello&apikey=YOUR_API_KEY';
+$url = 'https://api.ferdev.my.id/search/pinterest?query=nature&apikey=YOUR_API_KEY';
 $response = file_get_contents($url);
 $data = json_decode($response, true);
 print_r($data);
@@ -474,9 +474,9 @@ print_r($data);
               <pre><code>{`# Menggunakan requests
 import requests
 
-url = 'https://api.ferdev.my.id/ai/chatgpt'
+url = 'https://api.ferdev.my.id/search/pinterest'
 params = {
-    'text': 'Hello',
+    'query': 'nature',
     'apikey': 'YOUR_API_KEY'
 }
 response = requests.get(url, params=params)

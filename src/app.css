@@ -258,15 +258,15 @@ body {
 }
 
 .logo {
-    font-family: "Bebas Neue", sans-serif;
-    font-size: 22px;
-    letter-spacing: 2px;
-    color: var(--text);
-    text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 2px;
-    white-space: nowrap;
+    text-decoration: none;
+}
+
+.logo-img {
+    height: 32px;
+    width: auto;
+    display: block;
 }
 
 .logo .accent {
@@ -553,6 +553,11 @@ body {
     opacity: 0;
     transform: translateX(-8px);
     max-width: 0;
+    overflow: hidden;
+}
+
+.sidebar.collapsed .sidebar-item i.sidebar-text {
+    display: none;
 }
 
 .sidebar.collapsed .sidebar-count {
@@ -2134,11 +2139,11 @@ code {
 .usage-guide {
     max-width: 1200px;
     margin: 48px auto;
-    padding: 40px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: var(--shadow-sm);
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .usage-header {
@@ -2611,8 +2616,8 @@ code {
 
 @media (max-width: 768px) {
     .usage-guide {
-        padding: 24px 20px;
-        margin: 32px 16px;
+        padding: 0;
+        margin: 32px 0;
     }
 
     .usage-header h2 {
@@ -2620,7 +2625,7 @@ code {
     }
 
     .method-section {
-        padding: 16px;
+        padding: 0;
     }
 
     .method-header h3 {

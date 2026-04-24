@@ -515,7 +515,7 @@ print(result)`
                       <i class="fa-solid fa-tag"></i>
                       {param.type || 'string'}
                     </span>
-                    {#if param.defaultValue}
+                    {#if param.defaultValue && (param.type || 'string').toLowerCase() !== 'string'}
                       <span class="param-default">
                         <i class="fa-solid fa-circle-info"></i>
                         Default: <code>{param.defaultValue}</code>
@@ -628,7 +628,6 @@ print(result)`
             on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (showResponseExample = !showResponseExample)}
           >
             <div class="response-example-title">
-              <i class="fa-solid fa-arrow-left-long"></i>
               Response Example
               {#if api.response.statusCode}
                 <span class="response-status-badge status-{api.response.statusCode >= 200 && api.response.statusCode < 300 ? 'success' : 'error'}">
